@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LinOS - Web Desktop OS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- BOOT / INTRO SCREEN -->
+  <div id="boot-screen" class="fullscreen boot-screen">
+    <div class="boot-logo">LinOS</div>
+    <div class="boot-sub">Hybrid macOS + Linux Web Desktop</div>
+    <div class="boot-progress">
+      <div class="boot-bar"></div>
+    </div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="fullscreen login-screen hidden">
+    <div class="login-panel glass">
+      <div class="login-avatar"></div>
+      <h1 class="login-username">Login to LinOS</h1>
+      <input id="login-username" class="login-input" type="text" placeholder="Username" />
+      <input id="login-password" class="login-input" type="password" placeholder="Password" />
+      <div id="login-error" class="login-error hidden"></div>
+      <button id="login-button" class="btn primary">Login</button>
+    </div>
+  </div>
+
+  <!-- DESKTOP -->
+  <div id="desktop" class="fullscreen desktop hidden">
+    <!-- Wallpaper -->
+    <div class="wallpaper"></div>
+
+    <!-- Top bar (mac-like) -->
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="traffic-lights">
+          <span class="dot close" title="Close active window"></span>
+          <span class="dot min" title="Minimize active window"></span>
+          <span class="dot max" title="Maximize active window"></span>
+        </div>
+        <div class="top-bar-title">LinOS</div>
+      </div>
+      <div class="top-bar-center">
+        <div class="menu-item">File</div>
+        <div class="menu-item">Edit</div>
+        <div class="menu-item">View</div>
+        <div class="menu-item">Help</div>
+      </div>
+      <div class="top-bar-right">
+        <div id="top-clock" class="top-clock"></div>
+        <div class="top-icon" title="Settings" data-open-app="settings">⚙</div>
+        <div class="top-icon" title="App Library" data-open-app="launcher">◻</div>
+        <div class="top-icon" title="Power" id="power-button">⏻</div>
+      </div>
+    </div>
+
+    <!-- Dock (mac + linux mix) -->
+    <div class="dock glass">
+      <div class="dock-group">
+        <div class="dock-item" data-open-app="browser" title="LinOS Browser">
+          <span class="dock-icon">🌐</span>
+          <span class="dock-label">Browser</span>
+        </div>
+        <div class="dock-item" data-open-app="files" title="Files">
+          <span class="dock-icon">🗂</span>
+          <span class="dock-label">Files</span>
+        </div>
+        <div class="dock-item" data-open-app="settings" title="Settings">
+          <span class="dock-icon">⚙</span>
+          <span class="dock-label">Settings</span>
+        </div>
+      </div>
+      <div class="dock-group">
+        <div class="dock-item" data-open-app="store" title="LinOS Store">
+          <span class="dock-icon">🛒</span>
+          <span class="dock-label">Store</span>
+        </div>
+        <div class="dock-item" data-open-app="about" title="About LinOS">
+          <span class="dock-icon">ⓘ</span>
+          <span class="dock-label">About</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Icons (linux-like) -->
+    <div class="desktop-icons">
+      <div class="desktop-icon" data-open-app="files">
+        <div class="icon-img">🗂</div>
+        <div class="icon-label">Home</div>
+      </div>
+      <div class="desktop-icon" data-open-app="browser">
+        <div class="icon-img">🌐</div>
+        <div class="icon-label">Browser</div>
+      </div>
+      <div class="desktop-icon" data-open-app="store">
+        <div class="icon-img">🛒</div>
+        <div class="icon-label">LinOS Store</div>
+      </div>
+    </div>
+
+    <!-- WINDOWS / APPS -->
+
+    <!-- Browser App -->
+    <div class="window hidden" id="app-browser" data-app-id="browser">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">LinOS Browser</div>
+        <div class="window-actions">
+          <button class="title-btn" id="browser-home">🏠</button>
+        </div>
+      </div>
+      <div class="window-content browser-content">
+        <div class="browser-toolbar">
+          <button class="btn xs" id="browser-back">←</button>
+          <button class="btn xs" id="browser-forward">→</button>
+          <button class="btn xs" id="browser-reload">⟳</button>
+          <input id="browser-url" class="browser-url" type="text" placeholder="Enter URL or search (sandboxed)" />
+          <button class="btn xs" id="browser-go">Go</button>
+        </div>
+        <div id="browser-view" class="browser-view">
+          <!-- Real web content is shown inside this iframe -->
+          <iframe
+            id="browser-frame"
+            class="browser-frame"
+            src="https://duckduckgo.com"
+            title="LinOS Web Browser"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Files App -->
+    <div class="window hidden" id="app-files" data-app-id="files">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">Files</div>
+      </div>
+      <div class="window-content files-content">
+        <div class="files-sidebar">
+          <div class="files-section-title">Places</div>
+          <div class="files-nav-item active" data-path="/home">🏠 Home</div>
+          <div class="files-nav-item" data-path="/documents">📄 Documents</div>
+          <div class="files-nav-item" data-path="/pictures">🖼 Pictures</div>
+          <div class="files-nav-item" data-path="/apps">📦 Apps</div>
+        </div>
+        <div class="files-main">
+          <div class="files-toolbar">
+            <button class="btn xs" id="files-new-folder">New Folder</button>
+            <button class="btn xs" id="files-new-file">New File</button>
+          </div>
+          <div id="files-path" class="files-path">/home</div>
+          <div id="files-list" class="files-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings App -->
+    <div class="window hidden" id="app-settings" data-app-id="settings">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">Settings</div>
+      </div>
+      <div class="window-content settings-content">
+        <div class="settings-sidebar">
+          <div class="settings-item active" data-settings-page="appearance">Appearance</div>
+          <div class="settings-item" data-settings-page="system">System</div>
+          <div class="settings-item" data-settings-page="about">About</div>
+        </div>
+        <div class="settings-main">
+          <div class="settings-page" data-settings-page="appearance">
+            <h2>Appearance</h2>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-dark-mode" />
+              <span>Enable dark mode</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-glass" checked />
+              <span>Use glass blur</span>
+            </label>
+          </div>
+          <div class="settings-page hidden" data-settings-page="system">
+            <h2>System</h2>
+            <p>LinOS version: 1.0.0 (web)</p>
+            <p>Browser: <span id="settings-browser-info"></span></p>
+            <p>Platform: <span id="settings-platform-info"></span></p>
+          </div>
+          <div class="settings-page hidden" data-settings-page="about">
+            <h2>About</h2>
+            <p>LinOS is a hybrid macOS + Linux inspired web desktop environment.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Launcher -->
+    <div class="window hidden" id="app-launcher" data-app-id="launcher">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">App Library</div>
+      </div>
+      <div class="window-content launcher-content">
+        <div class="app-grid">
+          <div class="app-tile" data-open-app="browser">
+            <div class="app-icon">🌐</div>
+            <div class="app-name">Browser</div>
+          </div>
+          <div class="app-tile" data-open-app="files">
+            <div class="app-icon">🗂</div>
+            <div class="app-name">Files</div>
+          </div>
+          <div class="app-tile" data-open-app="settings">
+            <div class="app-icon">⚙</div>
+            <div class="app-name">Settings</div>
+          </div>
+          <div class="app-tile" data-open-app="store">
+            <div class="app-icon">🛒</div>
+            <div class="app-name">Store</div>
+          </div>
+          <div class="app-tile" data-open-app="about">
+            <div class="app-icon">ⓘ</div>
+            <div class="app-name">About</div>
+          </div>
+          <div class="app-tile" data-open-app="terminal">
+            <div class="app-icon">>_</div>
+            <div class="app-name">Terminus Shell</div>
+          </div>
+          <div class="app-tile" data-open-app="notes">
+            <div class="app-icon">📝</div>
+            <div class="app-name">FeatherNotes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store App -->
+    <div class="window hidden" id="app-store" data-app-id="store">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">LinOS Store</div>
+      </div>
+      <div class="window-content store-content">
+        <div class="store-list" id="store-list"></div>
+        <div class="store-details" id="store-details">
+          <h2>LinOS Store</h2>
+          <p>Select an app to view details and install.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- About App -->
+    <div class="window hidden" id="app-about" data-app-id="about">
+      <div class="window-titlebar">
+        <div class="traffic-lights small">
+          <span class="dot close" data-window-close></span>
+          <span class="dot min" data-window-minimize></span>
+          <span class="dot max" data-window-maximize></span>
+        </div>
+        <div class="window-title">About LinOS</div>
+      </div>
+      <div class="window-content about-content">
+        <h1>LinOS</h1>
+        <p>A mixed macOS + Linux style web desktop environment.</p>
+        <ul>
+          <li>Drag windows by their titlebars.</li>
+          <li>Use the dock or app library to launch apps.</li>
+          <li>Experiment with settings and the file system.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
