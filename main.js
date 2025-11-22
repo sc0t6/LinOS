@@ -312,6 +312,14 @@
       label.textContent = name;
       item.appendChild(icon);
       item.appendChild(label);
+
+      // allow double-click to navigate into folders in Files app
+      if (node.type === 'dir') {
+        item.addEventListener('dblclick', () => {
+          renderFiles(path + (path.endsWith('/') ? '' : '/') + name);
+        });
+      }
+
       filesList.appendChild(item);
     }
   }
@@ -558,6 +566,161 @@
     }
   }
 
+  // TEXT EDITOR (FeatherEdit) - integrates with virtual FS
+  const editorTree = document.getElementById('editor-tree');
+  const editorPathLabel = document.getElementById('editor-path');
+  const editorText = document.getElementById('editor-text');
+  const editorOpenFileLabel = document.getElementById('editor-open-file-label');
+  const editorNewFolderBtn = document.getElementById('editor-new-folder');
+  const editorNewFileBtn = document.getElementById('editor-new-file');
+  const editorSaveBtn = document.getElementById('editor-save');
+
+  let editorCurrentPath = '/home';
+  let editorOpenFilePath = null; // e.g. /home/readme.txt
+
+  function renderEditorTree(path) {
+    if (!editorTree) return;
+    const dir = getDir(path);
+    if (!dir || dir.type !== 'dir') return;
+    editorCurrentPath = path;
+    editorPathLabel.textContent = path;
+    editorTree.innerHTML = '';
+    const entries = Object.entries(dir.children);
+    entries.forEach(([name, node]) => {
+      const row = document.createElement('div');
+      row.className = 'files-item';
+      const icon = document.createElement('div');
+      icon.className = 'files-item-icon';
+      icon.textContent = node.type === 'dir' ? '📁' : '📄';
+      const label = document.createElement('div');
+      label.className = 'files-item-label';
+      label.textContent = name;
+      row.appendChild(icon);
+      row.appendChild(label);
+
+      if (node.type === 'dir') {
+        row.addEventListener('click', () => {
+          renderEditorTree(path + (path.endsWith('/') ? '' : '/') + name);
+        });
+      } else {
+        row.addEventListener('click', () => {
+          const fullPath = path + (path.endsWith('/') ? '' : '/') + name;
+          editorOpenFilePath = fullPath;
+          if (editorOpenFileLabel) editorOpenFileLabel.textContent = fullPath;
+          editorText.value = node.content || '';
+        });
+      }
+
+      editorTree.appendChild(row);
+    });
+  }
+
+  editorNewFolderBtn?.addEventListener('click', () => {
+    const name = prompt('New folder name:');
+    if (!name) return;
+    createInDir(editorCurrentPath, name, false);
+    renderEditorTree(editorCurrentPath);
+  });
+
+  editorNewFileBtn?.addEventListener('click', () => {
+    const name = prompt('New file name:');
+    if (!name) return;
+    createInDir(editorCurrentPath, name, true);
+    renderEditorTree(editorCurrentPath);
+  });
+
+  editorSaveBtn?.addEventListener('click', () => {
+    if (!editorOpenFilePath) {
+      alert('No file selected to save.');
+      return;
+    }
+    // navigate down from /home to this file
+    const parts = editorOpenFilePath.split('/').filter(Boolean);
+    let cur = fsTree['/home'];
+    for (let i = 1; i < parts.length; i++) {
+      const name = parts[i];
+      if (!cur.children[name]) {
+        cur.children[name] = i === parts.length - 1
+          ? { type: 'file', content: '' }
+          : { type: 'dir', children: {} };
+      }
+      if (i === parts.length - 1) {
+        cur.children[name].type = 'file';
+        cur.children[name].content = editorText.value;
+      } else {
+        cur = cur.children[name];
+      }
+    }
+    saveFS();
+    renderFiles(currentFsPath);
+    alert('File saved.');
+  });
+
+  // SYSTEM UTILITY / TASK MANAGER
+  const taskmanList = document.getElementById('taskman-list');
+  const crashScreen = document.getElementById('crash-screen');
+  const crashExitBtn = document.getElementById('crash-exit');
+  const crashResetBtn = document.getElementById('crash-reset');
+
+  const tasks = [
+    { name: 'LinOS-KN.exe', status: 'Running', critical: true },
+    { name: 'FeatherEdit.exe', status: 'Idle', critical: false },
+    { name: 'BrowserHost.exe', status: 'Running', critical: false },
+  ];
+
+  function renderTasks() {
+    if (!taskmanList) return;
+    taskmanList.innerHTML = '';
+    tasks.forEach((t) => {
+      const row = document.createElement('div');
+      row.className = 'files-item';
+      row.style.display = 'grid';
+      row.style.gridTemplateColumns = '2fr 1fr auto';
+      row.style.alignItems = 'center';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'files-item-label';
+      nameEl.textContent = t.name;
+
+      const statusEl = document.createElement('div');
+      statusEl.className = 'files-item-label';
+      statusEl.textContent = t.status;
+
+      const actionEl = document.createElement('div');
+      const btn = document.createElement('button');
+      btn.className = 'btn xs';
+      btn.textContent = 'End task';
+      btn.addEventListener('click', () => {
+        if (t.critical) {
+          crashScreen?.classList.remove('hidden');
+        } else {
+          t.status = 'Terminated';
+          btn.disabled = true;
+          statusEl.textContent = t.status;
+        }
+      });
+      actionEl.appendChild(btn);
+
+      row.appendChild(nameEl);
+      row.appendChild(statusEl);
+      row.appendChild(actionEl);
+      taskmanList.appendChild(row);
+    });
+  }
+
+  crashExitBtn?.addEventListener('click', () => {
+    crashScreen?.classList.add('hidden');
+    desktop.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+  });
+
+  crashResetBtn?.addEventListener('click', () => {
+    localStorage.removeItem(FS_KEY);
+    localStorage.removeItem(PREF_KEY);
+    crashScreen?.classList.add('hidden');
+    location.reload();
+  });
+
   // Pre-ensure default installed dynamic apps if any
   Object.keys(installed).forEach((id) => ensureDynamicApp(id));
 
@@ -565,4 +728,6 @@
   applyPrefs();
   renderFiles('/home');
   renderStore();
+  if (editorTree) renderEditorTree('/home');
+  if (taskmanList) renderTasks();
 })();
